@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>スタートページ</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        #clock {
+            text-align: center;
+            font-size: 2rem;
+            margin: 20px 0;
+        }
+
+        .search-box {
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            margin: 0 auto;
+            max-width: 600px;
+            padding: 8px;
+            margin-bottom: 40px;
+        }
+
+        .search-input {
+            border: none;
+            font-size: 16px;
+            outline: none;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 24px;
+        }
+
+        .search-button {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 12px 24px;
+            margin-left: 8px;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .link-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .link-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .link-card img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 10px;
+        }
+
+        .link-card-title {
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        #addLinkBtn {
+            background: var(--card-bg);
+            border: 2px dashed #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #addLinkBtn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            margin: 50px auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="clock"></div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Google で検索">
+            <button class="search-button" onclick="performSearch()">検索</button>
+        </div>
+
+        <div class="links-grid" id="linksGrid"></div>
+    </div>
+
+    <div id="linkModal" class="modal">
+        <div class="modal-content">
+            <div class="form-group">
+                <label>タイトル:</label>
+                <input type="text" id="linkTitle">
+            </div>
+            <div class="form-group">
+                <label>URL:</label>
+                <input type="text" id="linkUrl">
+            </div>
+            <div class="form-group">
+                <label>アイコンURL:</label>
+                <input type="text" id="linkIcon">
+            </div>
+            <button class="search-button" onclick="saveLink()">保存</button>
+            <button class="search-button" onclick="closeModal()">キャンセル</button>
+        </div>
+    </div>
+
+    <script>
+        // 時計の更新
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('clock').textContent = now.toLocaleDateString('ja-JP', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 検索機能
+        function performSearch() {
+            const query = document.getElementById('searchInput').value;
+            if (query) {
+                window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // Enter キーでの検索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // リンクデータ
+        let links = JSON.parse(localStorage.getItem('links')) || [
+            {
+                title: 'Claude',
+                url: 'https://claude.ai/new',
+                icon: './img/claude_app_icon.png'
+            },
+            {
+                title: 'Github',
+                url: 'https://github.com/',
+                icon: './img/github.png'
+            },
+            {
+                title: '回線速度テスト',
+                url: 'https://fast.com/ja/',
+                icon: './img/fast.png'
+            },
+            {
+                title: 'Kaggle',
+                url: 'https://www.kaggle.com/',
+                icon: './img/kaggle.png'
+            },
+            {
+                title: '過去問道場',
+                url: 'https://www.ap-siken.com/apkakomon.php',
+                icon: './img/doujou.png'
+            }
+        ];
+
+        // リンクの表示
+        function renderLinks() {
+            const grid = document.getElementById('linksGrid');
+            grid.innerHTML = '';
+
+            links.forEach((link, index) => {
+                const card = document.createElement('div');
+                card.className = 'link-card';
+                card.innerHTML = `
+                    <img src="${link.icon}" alt="${link.title}">
+                    <div class="link-card-title">${link.title}</div>
+                `;
+                card.onclick = () => window.location.href = link.url;
+                grid.appendChild(card);
+            });
+
+            // 追加ボタン
+            const addButton = document.createElement('div');
+            addButton.className = 'link-card';
+            addButton.id = 'addLinkBtn';
+            addButton.innerHTML = `
+                <div style="font-size: 24px;">+</div>
+                <div class="link-card-title">新規追加</div>
+            `;
+            addButton.onclick = showModal;
+            grid.appendChild(addButton);
+        }
+
+        // モーダル関連の機能
+        function showModal() {
+            document.getElementById('linkModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('linkModal').style.display = 'none';
+            document.getElementById('linkTitle').value = '';
+            document.getElementById('linkUrl').value = '';
+            document.getElementById('linkIcon').value = '';
+        }
+
+        function saveLink() {
+            const title = document.getElementById('linkTitle').value;
+            const url = document.getElementById('linkUrl').value;
+            const icon = document.getElementById('linkIcon').value;
+
+            if (title && url) {
+                links.push({ title, url, icon });
+                localStorage.setItem('links', JSON.stringify(links));
+                renderLinks();
+                closeModal();
+            }
+        }
+
+        // 初期表示
+        renderLinks();
+    </script>
+</body>
+</html>
